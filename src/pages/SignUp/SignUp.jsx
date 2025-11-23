@@ -4,6 +4,8 @@ import useAuth from "../../hooks/useAuth";
 import { toast } from "react-hot-toast";
 import { TbFidgetSpinner } from "react-icons/tb";
 import { useForm } from "react-hook-form";
+import axios from "axios";
+import { imageUplode } from "../../utils";
 
 const SignUp = () => {
   const { createUser, updateUserProfile, signInWithGoogle, loading } =
@@ -18,12 +20,41 @@ const SignUp = () => {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm();
-  console.log(errors);
-  const onSubmit = (data) => {
+  // console.log(errors);
+  const onSubmit = async (data) => {
     const { name, image, email, password } = data;
+    //!note:2. generate image url form selected file
+    const imageFile = image[0];
+    // const formData = new FormData();
+    // formData.append("image", imageFile);
+
+    try {
+      // const { data } = await axios.post(
+      //   `https://api.imgbb.com/1/upload?key=${
+      //     import.meta.env.VITE_IMGBB_API_KEY
+      //   }`,
+      //   formData
+      // );
+
+      //* imageUplode() index.js theke asteche
+      const imageURL = await imageUplode(imageFile);
+
+      //note:1. User Registration
+      const result = await createUser(email, password);
+
+      //note:3. Save username & profile photo
+      await updateUserProfile(name, imageURL);
+      // console.log(result);
+
+      navigate(from, { replace: true });
+      toast.success("Signup Successful");
+      console.log(result);
+    } catch (err) {
+      console.log(err);
+      toast.error(err?.message);
+    }
   };
 
   // form submit handler
@@ -56,6 +87,7 @@ const SignUp = () => {
   // };
 
   // Handle Google Signin
+
   const handleGoogleSignIn = async () => {
     try {
       //User Registration using google
