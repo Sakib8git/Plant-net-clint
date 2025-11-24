@@ -1,15 +1,57 @@
 import { useForm } from "react-hook-form";
 import { imageUplode } from "../../utils";
 import useAuth from "../../hooks/useAuth";
-import { use } from "react";
+import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
+import LoadingSpinner from "../Shared/LoadingSpinner";
+import toast from "react-hot-toast";
+import { TbFidgetSpinner } from "react-icons/tb";
 
 const AddPlantForm = () => {
   const { user } = useAuth();
+  //!note: tanstack useMutation hook
+  //*note: useMutation() (post|| put|| patch|| delete)
+  const {
+    isPending,
+    isError,
+    mutateAsync,
+    reset: mutationReset,
+  } = useMutation({
+    mutationFn: async (payload) => {
+      return await axios.post(
+        `${import.meta.env.VITE_API_URL}/plants`,
+        payload
+      );
+    },
+    onSuccess: (data) => {
+      console.log(data);
+      // toast
+      toast.success("Plant added successfully!");
+      mutationReset();
+      // query key invalidate
+    },
+    onError: (error) => {
+      console.log(error);
+    },
+    onMutate: (payload) => {
+      console.log("i will post this--->", payload);
+    },
+    onSettled: (data, error) => {
+      if (data) {
+        console.log(data);
+      }
+      if (error) {
+        console.log(error);
+      }
+    },
+    retry: 3,
+  });
+
   // !react hook form
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm();
   // console.log(errors);
@@ -32,16 +74,19 @@ const AddPlantForm = () => {
           image: user?.photoURL,
         },
       };
-      const { data } = await axios.post(
-        `${import.meta.env.VITE_API_URL}/plants`,
-        plantData
-      );
-      console.log(data);
+      // mutateAsync dite payload e plant data pathailam
+      await mutateAsync(plantData);
+      reset();
     } catch (err) {
       console.log(err);
     }
   };
-
+  if (isPending) {
+    return <LoadingSpinner></LoadingSpinner>;
+  }
+  if (isError) {
+    return <p>I am Error</p>;
+  }
   return (
     <div className="w-full min-h-[calc(100vh-40px)] flex flex-col justify-center items-center text-gray-800 rounded-xl bg-gray-50">
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -191,7 +236,11 @@ const AddPlantForm = () => {
               type="submit"
               className="w-full cursor-pointer p-3 mt-5 text-center font-medium text-white transition duration-200 rounded shadow-md bg-lime-500 "
             >
-              Save & Continue
+              {isPending ? (
+                <TbFidgetSpinner className="animate-spin m-auto" />
+              ) : (
+                "Save & Continue"
+              )}
             </button>
           </div>
         </div>
