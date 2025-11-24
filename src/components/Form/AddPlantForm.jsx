@@ -56,7 +56,7 @@ const AddPlantForm = () => {
   } = useForm();
   // console.log(errors);
   const onSubmit = async (data) => {
-    const { name, description, quantity, price, image } = data;
+    const { name, description, quantity, price, image, category } = data;
     const imageFile = image[0];
     //* imageUplode() index.js theke asteche
 
@@ -66,6 +66,7 @@ const AddPlantForm = () => {
         image: imageUrl,
         name,
         description,
+        category,
         quantity: Number(quantity),
         price: Number(price),
         seller: {
@@ -116,9 +117,7 @@ const AddPlantForm = () => {
                 Category
               </label>
               <select
-                required
                 className="w-full px-4 py-3 border-lime-300 focus:outline-lime-500 rounded-md bg-white"
-                name="category"
                 {...register("category", {
                   required: "Plant category is required",
                 })}
